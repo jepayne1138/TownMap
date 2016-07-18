@@ -5,17 +5,16 @@ import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.MenuItemHoverListener;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
+import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -29,7 +28,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 public class MapsActivity extends AppCompatActivity implements
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        SignInDialogFragment.SignInDialogListener {
 
     private final String LOG_TAG = this.getClass().getSimpleName();
     private final int PERMISSIONS_REQUEST_FINE_LOCATION = 0;
@@ -40,6 +40,11 @@ public class MapsActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private LocationListener followListener;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +60,9 @@ public class MapsActivity extends AppCompatActivity implements
                 (SupportMapFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -67,7 +75,7 @@ public class MapsActivity extends AppCompatActivity implements
         }
 
         if (mMap == null) {
-            android.support.v4.app.FragmentManager fragMan = getSupportFragmentManager();
+            FragmentManager fragMan = getSupportFragmentManager();
             SupportMapFragment mapFragment =
                     (SupportMapFragment) fragMan.findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
@@ -116,8 +124,8 @@ public class MapsActivity extends AppCompatActivity implements
     private boolean checkLocationPermission() {
         Log.d(LOG_TAG, "checkLocationPermissions called");
         if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
             Log.d(LOG_TAG, "FINE_LOCATION permission not granted!");
             Log.d(LOG_TAG, "Requesting FINE_LOCATION permission...");
             // Location permission was not granted, request permission
@@ -145,7 +153,7 @@ public class MapsActivity extends AppCompatActivity implements
                     Log.d(LOG_TAG, "FINE_LOCATION permission was granted");
                     if (ActivityCompat.checkSelfPermission(this,
                             Manifest.permission.ACCESS_FINE_LOCATION)
-                                != PackageManager.PERMISSION_GRANTED) {
+                            != PackageManager.PERMISSION_GRANTED) {
                         Log.d(LOG_TAG, "Second check passed, setting map location enabled");
                         mMap.setMyLocationEnabled(true);
                         // If the ApiClient, LocationRequest and FollowListener have all been
@@ -205,11 +213,13 @@ public class MapsActivity extends AppCompatActivity implements
 
     // Implements GoogleApiClient.ConnectionCallbacks
     @Override
-    public void onConnectionSuspended(int i) {}
+    public void onConnectionSuspended(int i) {
+    }
 
     // GoogleApiClient.OnConnectionFailedListener
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {}
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -225,8 +235,25 @@ public class MapsActivity extends AppCompatActivity implements
                 return true;
             case R.id.action_sign_in:
                 // Sign In option was chosen in the toolbar
+                showSignInDialog();
                 return true;
         }
-        return false;
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showSignInDialog() {
+        android.support.v4.app.DialogFragment signInDialog = new SignInDialogFragment();
+        signInDialog.show(getSupportFragmentManager(), "SignInDialogFragment");
+    }
+
+    @Override
+    public void onGoogleSignInClick(android.support.v4.app.DialogFragment dialog) {
+        Log.d(LOG_TAG, "onGoogleSignInClick");
+
+    }
+
+    @Override
+    public void onDialogNegativeClick(android.support.v4.app.DialogFragment dialog) {
+        Log.d(LOG_TAG, "onDialogNegativeClick");
     }
 }
