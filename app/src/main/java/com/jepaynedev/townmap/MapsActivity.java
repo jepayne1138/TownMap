@@ -40,11 +40,7 @@ public class MapsActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private LocationListener followListener;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+    private boolean signedIn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,9 +56,6 @@ public class MapsActivity extends AppCompatActivity implements
                 (SupportMapFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -224,6 +217,13 @@ public class MapsActivity extends AppCompatActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_toolbar, menu);
+        if (signedIn) {
+            menu.findItem((R.id.action_sign_in)).setVisible(false);
+            menu.findItem((R.id.action_sign_out)).setVisible(true);
+        } else {
+            menu.findItem((R.id.action_sign_in)).setVisible(true);
+            menu.findItem((R.id.action_sign_out)).setVisible(false);
+        }
         return true;
     }
 
@@ -237,23 +237,40 @@ public class MapsActivity extends AppCompatActivity implements
                 // Sign In option was chosen in the toolbar
                 showSignInDialog();
                 return true;
+            case R.id.action_sign_out:
+                // Sign Out option was chosen in the toolbar
+                // TODO: Implement sign out handler
+
+                // Rebuild the menu with flag indicating we're signed out to hide the sign out
+                // option and re-show the sign in option
+                signedIn = false;
+                invalidateOptionsMenu();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void showSignInDialog() {
         android.support.v4.app.DialogFragment signInDialog = new SignInDialogFragment();
-        signInDialog.show(getSupportFragmentManager(), "SignInDialogFragment");
+        signInDialog.show(
+                getSupportFragmentManager(), String.valueOf(R.string.fragment_tag_sign_in_dialog));
     }
 
     @Override
     public void onGoogleSignInClick(android.support.v4.app.DialogFragment dialog) {
         Log.d(LOG_TAG, "onGoogleSignInClick");
+        // TODO: Implement handler on the condition that sign in was successful
+        // May need to check for success first, not sure if we can make is so this is only called
+        // upon success
 
+        // Hide the sign in option from the overflow Toolbar menu and replace with sign out
+        // TODO:  Make sure this method is only being called on success only
+        signedIn = true;
+        invalidateOptionsMenu();
     }
 
     @Override
     public void onDialogNegativeClick(android.support.v4.app.DialogFragment dialog) {
-        Log.d(LOG_TAG, "onDialogNegativeClick");
+        // Sign in dialog was canceled, we remain signed out
     }
 }
