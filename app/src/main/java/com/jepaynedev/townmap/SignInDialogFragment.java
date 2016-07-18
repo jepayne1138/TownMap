@@ -57,6 +57,8 @@ public class SignInDialogFragment extends DialogFragment implements View.OnClick
         SignInButton signInButton = (SignInButton) dialogView.findViewById(
                 R.id.google_sign_in_button);
         signInButton.setOnClickListener(this);
+        signInButton.setSize(SignInButton.SIZE_WIDE);
+
 
         // Set the layout for the dialog
         dialogBuilder.setView(dialogView)

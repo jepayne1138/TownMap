@@ -1,6 +1,8 @@
 package com.jepaynedev.townmap;
 
 import android.Manifest;
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,10 +15,18 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.OptionalPendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -41,6 +51,10 @@ public class MapsActivity extends AppCompatActivity implements
     private LocationRequest mLocationRequest;
     private LocationListener followListener;
     private boolean signedIn = false;
+
+    // Added for the Google signin sample code
+    private ProgressDialog mProgressDialog;
+    private static final int RC_SIGN_IN = 9001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +90,18 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
     protected synchronized void buildGoogleApiClient() {
+        // Configure sign-in to request the user's ID and basic profile.
+        // ID and basic profile are included in DEFAULT_SIGN_IN.
+        GoogleSignInOptions signInOptions = new GoogleSignInOptions
+                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build();
+
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions)
                 .build();
     }
 
@@ -211,7 +232,10 @@ public class MapsActivity extends AppCompatActivity implements
 
     // GoogleApiClient.OnConnectionFailedListener
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        // An unresolvable error has occurred and Google APIs (including Sign-In) will not
+        // be available.
+        Log.d(LOG_TAG, "onConnectionFailed:" + connectionResult);
     }
 
     @Override
@@ -240,11 +264,9 @@ public class MapsActivity extends AppCompatActivity implements
             case R.id.action_sign_out:
                 // Sign Out option was chosen in the toolbar
                 // TODO: Implement sign out handler
+//                signOut();
 
-                // Rebuild the menu with flag indicating we're signed out to hide the sign out
-                // option and re-show the sign in option
-                signedIn = false;
-                invalidateOptionsMenu();
+                updateUiSignedInStatus(false);  // TODO: Remove when sign in implemented
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -263,14 +285,134 @@ public class MapsActivity extends AppCompatActivity implements
         // May need to check for success first, not sure if we can make is so this is only called
         // upon success
 
-        // Hide the sign in option from the overflow Toolbar menu and replace with sign out
-        // TODO:  Make sure this method is only being called on success only
-        signedIn = true;
-        invalidateOptionsMenu();
+        // Currently only signing in after the dialog closes
+        // I don't like this and need to find a way to change this so that he user is logged in
+        // while the dialog is still up.
+//        signIn();
+        updateUiSignedInStatus(true);  // TODO: Remove when sign in implemented
     }
 
     @Override
     public void onDialogNegativeClick(android.support.v4.app.DialogFragment dialog) {
         // Sign in dialog was canceled, we remain signed out
     }
+
+    private void updateUiSignedInStatus(boolean signedIn) {
+        this.signedIn = signedIn;
+        invalidateOptionsMenu();
+    }
+
+// =================================================================================================
+//  The following code has been taken from the Google signin sample project for requesting a token
+// =================================================================================================
+/*
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
+        if (opr.isDone()) {
+            // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
+            // and the GoogleSignInResult will be available instantly.
+            Log.d(LOG_TAG, "Got cached sign-in");
+            GoogleSignInResult result = opr.get();
+            handleSignInResult(result);
+        } else {
+            // If the user has not previously signed in on this device or the sign-in has expired,
+            // this asynchronous branch will attempt to sign in the user silently.  Cross-device
+            // single sign-on will occur in this branch.
+            showProgressDialog();
+            opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
+                @Override
+                public void onResult(GoogleSignInResult googleSignInResult) {
+                    hideProgressDialog();
+                    handleSignInResult(googleSignInResult);
+                }
+            });
+        }
+    }
+
+    // [START onActivityResult]
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInResult(result);
+        }
+    }
+    // [END onActivityResult]
+
+    // [START handleSignInResult]
+    private void handleSignInResult(GoogleSignInResult result) {
+        Log.d(LOG_TAG, "handleSignInResult:" + result.isSuccess());
+        if (result.isSuccess()) {
+            // Signed in successfully, show authenticated UI.
+            GoogleSignInAccount acct = result.getSignInAccount();
+            Log.d(LOG_TAG, "Signed is as: " + acct.getDisplayName());
+            updateUiSignedInStatus(true);
+        } else {
+            // Sign in was unsuccessful, make sure the menu still shows sign in options
+            updateUiSignedInStatus(false);
+        }
+    }
+    // [END handleSignInResult]
+
+    // [START signIn]
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+    // [END signIn]
+
+    // [START signOut]
+    private void signOut() {
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        // [START_EXCLUDE]
+                        updateUiSignedInStatus(false);
+                        // [END_EXCLUDE]
+                    }
+                });
+    }
+    // [END signOut]
+
+    // [START revokeAccess]
+    private void revokeAccess() {
+        // TODO:  Implement some way of callign this method (disconnect button)
+        //   Perhaps in the setting or (planned) profile menu?
+        Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        // [START_EXCLUDE]
+                        // Requested disconnection of Google account from app
+                        // TODO: Delete all information app obtain from the Google APIs
+                        updateUiSignedInStatus(false);
+                        // [END_EXCLUDE]
+                    }
+                });
+    }
+    // [END revokeAccess]
+
+    private void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.hide();
+        }
+    }
+    */
 }
