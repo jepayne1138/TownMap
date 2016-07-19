@@ -1,4 +1,4 @@
-package com.jepaynedev.townmap;
+package com.jepaynedev.townmap.database;
 
 import android.provider.BaseColumns;
 
@@ -14,19 +14,20 @@ public class DatabaseContract {
     // Define table contents for User table
     public static abstract class User implements BaseColumns {
         public static final String TABLE_NAME = "user";
-        public static final String COLUMN_NAME_ID = "google_id";
+        public static final String COLUMN_NAME_USER_ID = "user_id";
+        public static final String COLUMN_NAME_GOOGLE_ID = "google_id";
         public static final String COLUMN_NAME_TRAINER_NAME = "trainer_name";
         public static final String COLUMN_NAME_TRAINER_LEVEL = "trainer_level";
     }
 
-    // Define table constants for Catche table
-    public static abstract class Catche implements BaseColumns {
+    // Define table constants for Catch table
+    public static abstract class Catch implements BaseColumns {
         public static final String TABLE_NAME = "catch";
-        public static final String COLUMN_NAME_ID = "catch_id";
+        public static final String COLUMN_NAME_CATCH_ID = "catch_id";
         public static final String COLUMN_NAME_TRAINER_NAME = "trainer_name";
         public static final String COLUMN_NAME_TRAINER_LEVEL = "trainer_level";
-        public static final String COLUMN_NAME_USING_LURE = "usring_lure";
-        public static final String COLUMN_NAME_USING_INCENSE = "usring_incense";
+        public static final String COLUMN_NAME_USING_LURE = "using_lure";
+        public static final String COLUMN_NAME_USING_INCENSE = "using_incense";
         public static final String COLUMN_NAME_CREATURE_ID = "creature_id";
         public static final String COLUMN_NAME_LATITUDE = "latitude";
         public static final String COLUMN_NAME_LONGITUDE = "longitude";
@@ -37,7 +38,7 @@ public class DatabaseContract {
     public static abstract class Creature implements BaseColumns {
         public static final String TABLE_NAME = "creature";
         public static final String COLUMN_NAME_CREATURE_ID = "creature_id";
-        public static final String COLUMN_NAME_CREATURE_NAME = "creature_name";
-        public static final String COLUMN_NAME_CREATURE_ICON = "creature_icon";
+        public static final String COLUMN_NAME_CREATURE_NAME = "name";
+        public static final String COLUMN_NAME_CREATURE_ICON = "icon_path";
     }
 }

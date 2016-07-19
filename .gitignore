@@ -38,3 +38,6 @@ obj/
 
 # Gradle Properties
 gradle.properties
+
+# Python scripts used in generating assests
+*.py
