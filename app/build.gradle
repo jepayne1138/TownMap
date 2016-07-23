@@ -14,6 +14,7 @@ android {
     buildTypes {
         debug {
             resValue("string", "google_maps_key", GoogleMapsKey)
+            resValue("string", "api_url", ApiUrl)
         }
         release {
             minifyEnabled false
@@ -27,4 +28,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.google.android.gms:play-services:9.2.1'
+    compile 'com.android.volley:volley:1.0.0'
 }
