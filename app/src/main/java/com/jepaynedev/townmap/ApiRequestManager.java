@@ -23,8 +23,12 @@ import org.json.JSONObject;
  */
 public class ApiRequestManager {
 
+    public static enum ResponseType {
+        GET_CATCHES
+    };
+
     public interface ApiRequestListener {
-        public void onApiRequestRecieved(JSONArray jsonArray);
+        public void onApiRequestRecieved(JSONArray jsonArray, ResponseType responseType);
     }
 
     private ApiRequestListener apiRequestListener;
@@ -51,7 +55,8 @@ public class ApiRequestManager {
                     new Response.Listener<JSONArray>() {
                         @Override
                         public void onResponse(JSONArray response) {
-                            apiRequestListener.onApiRequestRecieved(response);
+                            apiRequestListener.onApiRequestRecieved(
+                                    response, ResponseType.GET_CATCHES);
                         }
                     },
                     new Response.ErrorListener() {
