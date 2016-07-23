@@ -36,4 +36,13 @@ public class DatabaseSchema {
         public static final String DROP_TABLE =
                 "DROP TABLE IF EXIST " + DatabaseContract.Catch.TABLE_NAME;
     }
+
+    // SQL statements for Creature table
+    public static abstract class Creature {
+        public static final String GET_CREATURE_NAMES =
+                "SELECT "
+                    + DatabaseContract.Creature.COLUMN_NAME_CREATURE_ID + ", "
+                    + DatabaseContract.Creature.COLUMN_NAME_CREATURE_NAME
+                + " FROM " + DatabaseContract.Creature.TABLE_NAME + ";";
+    }
 }

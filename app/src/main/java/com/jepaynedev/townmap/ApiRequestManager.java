@@ -1,7 +1,7 @@
 package com.jepaynedev.townmap;
 
-import android.app.DownloadManager;
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.Cache;
 import com.android.volley.Network;
@@ -15,7 +15,6 @@ import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.JsonArrayRequest;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Created by James Payne on 7/22/2016.
@@ -28,7 +27,7 @@ public class ApiRequestManager {
     };
 
     public interface ApiRequestListener {
-        public void onApiRequestRecieved(JSONArray jsonArray, ResponseType responseType);
+        public void onApiRequestReceived(JSONArray jsonArray, ResponseType responseType);
     }
 
     private ApiRequestListener apiRequestListener;
@@ -49,13 +48,14 @@ public class ApiRequestManager {
     }
 
     public void getCatches() {
-        String url = String.valueOf(R.string.api_url) + "/catches";
+        String url = context.getString(R.string.api_url) + "/catches";
+        Log.d("ApiManager", "getCatches(): url = " + url);
         JsonArrayRequest  jsonArrayRequest = new JsonArrayRequest(
                 Request.Method.GET, url, new JSONArray(),
                     new Response.Listener<JSONArray>() {
                         @Override
                         public void onResponse(JSONArray response) {
-                            apiRequestListener.onApiRequestRecieved(
+                            apiRequestListener.onApiRequestReceived(
                                     response, ResponseType.GET_CATCHES);
                         }
                     },

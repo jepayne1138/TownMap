@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,8 +37,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void createDataBase() throws IOException  // Not SQLiteException?
     {
         //If the database does not exist, copy it from the assets.
-        if(!checkDataBase())
-        {
+        if(!checkDataBase()) {
+            Log.d("DatabaseHelper", "Database does not exits - copy it");
             this.getReadableDatabase();
             this.close();
             try
@@ -49,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             {
                 throw new Error("ErrorCopyingDataBase");
             }
-        }
+        } else { Log.d("DatabaseHelper", "Database already exits"); }
     }
 
     private boolean checkDataBase() {

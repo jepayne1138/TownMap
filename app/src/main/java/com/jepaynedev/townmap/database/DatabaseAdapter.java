@@ -6,6 +6,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.io.IOException;
+import java.util.Hashtable;
 
 /**
  * Created by James Payne on 7/19/2016.
@@ -53,7 +54,7 @@ public class DatabaseAdapter {
         dbHelper.close();
     }
 
-    public Cursor query(String sql) {
+    private Cursor query(String sql) {
         try
         {
             Cursor mCur = database.rawQuery(sql, null);
@@ -69,4 +70,32 @@ public class DatabaseAdapter {
         }
     }
 
+    public Hashtable<Integer, String> getCreatureNameMap() {
+        Hashtable<Integer, String> creatureTable = new Hashtable<>();
+
+        // Query the creature database for creature ids and names
+        Cursor cursor = query(DatabaseSchema.Creature.GET_CREATURE_NAMES);
+
+        // Get the indices of id and name columns
+        try {
+            int columnCreatureId = cursor.getColumnIndexOrThrow(
+                    DatabaseContract.Creature.COLUMN_NAME_CREATURE_ID);
+            int columnCreatureName = cursor.getColumnIndexOrThrow(
+                    DatabaseContract.Creature.COLUMN_NAME_CREATURE_NAME);
+
+            // Iterate over the cursor to build the Hashtable
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                creatureTable.put(
+                        cursor.getInt(columnCreatureId), cursor.getString(columnCreatureName));
+                cursor.moveToNext();
+            }
+        } catch (IllegalArgumentException error) {
+            // TODO: Handle bad query or corrupted database
+            error.printStackTrace();
+        }
+
+        // Return the creature name map
+        return creatureTable;
+    }
 }
