@@ -32,7 +32,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 
 import static com.jepaynedev.townmap.ApiRequestManager.ResponseType.GET_CATCHES;
 
@@ -40,8 +43,7 @@ public class MapsActivity extends AppCompatActivity implements
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        SignInDialogFragment.SignInDialogListener,
-        ApiRequestManager.ApiRequestListener {
+        SignInDialogFragment.SignInDialogListener, AsyncLoadMarkers.AsyncMarkersResponse {
 
     private final String LOG_TAG = this.getClass().getSimpleName();
     private final int PERMISSIONS_REQUEST_FINE_LOCATION = 0;
@@ -54,8 +56,8 @@ public class MapsActivity extends AppCompatActivity implements
     private LocationListener followListener;
     private boolean signedIn = false;
     private ApiRequestManager apiRequestManager;
-    private DatabaseAdapter databaseAdapter;
-    private Hashtable<Integer, String> creatureNames;
+    private List<MarkerOptions> markers =
+            Collections.synchronizedList(new ArrayList<MarkerOptions>());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +74,7 @@ public class MapsActivity extends AppCompatActivity implements
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // Get database adapter
-        databaseAdapter = new DatabaseAdapter(this).createDatabase().open();
-        creatureNames = databaseAdapter.getCreatureNameMap();
+        loadMarkers();
     }
 
     @Override
@@ -131,10 +131,6 @@ public class MapsActivity extends AppCompatActivity implements
 
         // Check if we current have FINE_LOCATION permissions and request them if not
         checkLocationPermission();
-
-        // Create backend API manager
-        apiRequestManager = new ApiRequestManager(this, this);
-        apiRequestManager.getCatches();
     }
 
     private boolean checkLocationPermission() {
@@ -269,6 +265,8 @@ public class MapsActivity extends AppCompatActivity implements
                 signedIn = false;
                 invalidateOptionsMenu();
                 return true;
+            case R.id.action_refresh:
+                loadMarkers();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -277,6 +275,11 @@ public class MapsActivity extends AppCompatActivity implements
         android.support.v4.app.DialogFragment signInDialog = new SignInDialogFragment();
         signInDialog.show(
                 getSupportFragmentManager(), String.valueOf(R.string.fragment_tag_sign_in_dialog));
+    }
+
+    public void loadMarkers() {
+        Log.d(LOG_TAG, "loadMarkers");
+        new AsyncLoadMarkers(this, this).execute();
     }
 
     @Override
@@ -298,40 +301,12 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onApiRequestReceived(
-            JSONArray jsonArray, ApiRequestManager.ResponseType responseType) {
-        Log.d(LOG_TAG, "onApiRequestRecieved");
-        switch (responseType) {
-            case GET_CATCHES:
-                for (int index=0; index<jsonArray.length(); index++) {
-                    try {
-                        JSONObject jsonObject = jsonArray.getJSONObject(index);
-                        addCreatureMarker(
-                                jsonObject.getInt("creatureId"),
-                                jsonObject.getDouble("latitude"),
-                                jsonObject.getDouble("longitude"));
-
-                    } catch (JSONException error) {
-                        // Bad api call
-                        error.printStackTrace();
-                    }
-                }
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "No handler for response: " + responseType.toString());
+    public void onFinish(List<MarkerOptions> markers) {
+        Log.d(LOG_TAG, "onFinish");
+        this.markers = markers;
+        mMap.clear();
+        for (MarkerOptions marker : markers) {
+            mMap.addMarker(marker);
         }
-    }
-
-    private void addCreatureMarker(int markerId, double latitude, double longitude) {
-        String title = creatureNames.get(markerId);
-        LatLng latLng = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions()
-            .position(latLng)
-            .title(title)
-            .icon(BitmapDescriptorFactory.fromResource(getResources().getIdentifier(
-                "creature" + markerId, "drawable", "com.jepaynedev.townmap")))
-            .anchor(0.5f, 0.5f)
-        );
     }
 }

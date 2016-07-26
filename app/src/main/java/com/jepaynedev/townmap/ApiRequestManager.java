@@ -27,7 +27,8 @@ public class ApiRequestManager {
     };
 
     public interface ApiRequestListener {
-        public void onApiRequestReceived(JSONArray jsonArray, ResponseType responseType);
+        void onApiRequestReceived(JSONArray jsonArray, ResponseType responseType);
+        void postApiRequest(ResponseType responseType);
     }
 
     private ApiRequestListener apiRequestListener;
@@ -57,6 +58,7 @@ public class ApiRequestManager {
                         public void onResponse(JSONArray response) {
                             apiRequestListener.onApiRequestReceived(
                                     response, ResponseType.GET_CATCHES);
+                            apiRequestListener.postApiRequest(ResponseType.GET_CATCHES);
                         }
                     },
                     new Response.ErrorListener() {
